@@ -1,0 +1,80 @@
+//#include "stdafx.h"
+#include "queryTree.h"
+#include <string>
+#include <iostream>
+
+using namespace std;
+
+queryTree::queryTree(void)
+{
+	vector<vector<string>> patternTree;
+	vector<vector<string>> suchThatTree;
+	string select;
+}
+
+queryTree::~queryTree(void)
+{
+
+}
+
+void queryTree::insertPattern(string _assignStatement, string _pattern1, string _pattern1_type, string _pattern2,string _pattern2_type) {
+	vector<string> tempVector;
+	tempVector.push_back(_assignStatement);
+	tempVector.push_back(_pattern1);
+	tempVector.push_back(_pattern1_type);
+	tempVector.push_back(_pattern2);
+	tempVector.push_back(_pattern2_type);
+
+	patternTree.push_back(tempVector);
+}
+
+void queryTree::insertSuchThat(string _relationship, string _value1, string _value1_type, string _value2, string _value2_type){
+	vector<string> tempVector;
+	tempVector.push_back(_relationship);
+	tempVector.push_back(_value1);
+	tempVector.push_back(_value1_type);
+	tempVector.push_back(_value2);
+	tempVector.push_back(_value2_type);
+
+	suchThatTree.push_back(tempVector);
+}
+
+int queryTree::getPatternQuerySize(){
+	return patternTree.size();
+}
+
+int queryTree::getSuchThatQuerySize(){
+	return suchThatTree.size();
+}
+
+void queryTree::insertSelect(string _select){
+	select=_select;
+}
+
+vector<string> queryTree::getSuchThatQuery(int _queryPosition){
+	return suchThatTree[_queryPosition];
+}
+
+vector<string> queryTree::getPatternQuery(int _queryPosition){
+	return patternTree[_queryPosition];
+}
+
+string queryTree::getSelect(){
+	return select;
+}
+
+string queryTree::getSelectType(){
+	return selectType;
+}
+
+void queryTree::insertSelectType(string _selectType){
+	selectType=_selectType;
+}
+
+void queryTree::deleteSuchThat(int _index){
+	suchThatTree.erase(suchThatTree.begin() + _index);
+}
+
+void queryTree::insertSuchThatWithPosition(int _index, vector<string> _query){
+	suchThatTree.insert(suchThatTree.begin() + _index, _query );
+}

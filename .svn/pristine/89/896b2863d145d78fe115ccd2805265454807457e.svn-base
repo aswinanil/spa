@@ -1,0 +1,48 @@
+#pragma once
+#include "queryTree.h"
+#include <ctype.h>
+#include <string>
+#include <iostream>
+#include <vector>
+using namespace std;
+
+class PreProcessor {
+public:
+	// Default constructor
+	PreProcessor();
+
+	// returns true if inputIdent is valid NAME: LETTER(LETTER|DIGIT)*
+	bool PreProcessor::isValidName(string inputIdent);
+	
+	// returns true if inputIdent is valid IDENT: LETTER(LETTER|DIGIT|'#')*
+	bool PreProcessor::isValidIdent(string inputIdent);
+
+	// returns true if inputIdent is valid Expression-Spec: '_' ""var_name"" '_' | '_'
+	bool isValidExprSpec(string inputSpec);
+
+	// returns true if inputRef is valid Entity Reference: synonym | '_' | ""IDENT""
+	bool isValidEntRef(string inputRef);
+
+	// method to insert your synonyms in a table during declarations
+	bool insertDesEnt(string decValue, vector<string> * entVarVect);
+	
+	// has the synonym that appears in a query been declared initially ? Returns index that refers to synonym's desgin entity
+	int existsEntValue(std::string entValue);	
+	
+	// is the Design Entity used in the declarations among the list of allowed Design Entities ?
+	bool existsDesEnt(std::string desEnt);
+	
+	// method to validate a pattern and it's arguments in the query
+	bool isValidPattern(string pattAssign, string pattArg1, string pattArg2);	
+	
+	// method to validate a relation and it's arguments in the query
+	bool existsSubQuery(std::string relation, std::string arg1, std::string arg2);		
+	
+	// method to receive a query, parse it and return a list of results
+	queryTree* preProcess(std::string query);
+
+private:
+	std::vector < std::string > entTable;
+	std::vector < std::vector < std::string > > relTable;
+	std::vector < std::vector < std::string > > entVarTable;
+};

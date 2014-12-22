@@ -1,0 +1,45 @@
+//Follows stores all the Follows relationship in the program
+
+#pragma once
+
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+typedef int STMT; //statement number
+typedef vector<STMT> STMTLST;
+typedef short ORDER;
+
+class Follows{
+ 
+  public:
+  // Default constructor
+  Follows();
+
+  // method to set a follows link between firstStmt and secondStmt
+  // Note: secondStmt is the direct right sibling of firstStmt in AST
+  void setFollows(STMT firstStmt, STMT secondStmt);
+
+  // If order = 0, return statement that is the direct left sibling of stmt
+  // If order = 1, return statement that is the direct right sibling of stmt
+  // Otherwise, return -1
+  STMT getFollows(ORDER order, STMT stmt);
+
+  // If order = 0, return a list of statements that are the left siblings of stmt
+  // If order = 1, return a list of statements that are the right siblings of stmt
+  // Otherwise, return a list which has -1 as the only element
+  STMTLST getFollowsStar(ORDER order, STMT stmt);
+
+  // If secondStmt directly follows firstStmt, return true
+  // Otherwise, return false
+  bool isFollows(STMT firstStmt, STMT secondStmt);
+
+  // If secondStmt follows firstStmt, return true
+  // Otherwise, return false
+  bool isFollowsStar(STMT firstStmt, STMT secondStmt);
+
+
+ private:
+	 vector<STMTLST> FollowsDB; //Each element in FollowsDB is a pair, the first is the left sibling, the second is the right sibling
+};

@@ -1,0 +1,72 @@
+ //#include "stdafx.h"
+#include "PQLController.h"
+#include "PreProcessor.h"
+#include "queryTree.h"
+#include "AST.h"
+#include "evaluator.h"
+
+	PQLController::PQLController() {
+	}
+
+	PQLController::PQLController(PKB * inputPKB) {
+		pkb = inputPKB;
+	}
+
+	//maybe need accept 1 more argument
+	void PQLController::passInput(string queryInOneLine, list <string> &resultsList) {
+
+		//while(still have queries)
+		queryTree * tree = preProcessor.preProcess(queryInOneLine);
+		
+		/****** create sample Test Settings manually ******/
+		/*
+		AST* testAST = new AST();
+		Follows* testFollows = new Follows();
+		Parent* testParent = new Parent();
+
+		testFollows->setFollows(1, 2);
+		testFollows->setFollows(2, 5);
+		testFollows->setFollows(3, 4);
+		testParent->setParent(2,3);
+		testParent->setParent(2,4);
+		*/
+		//eval.insertAST(testAST);
+		//eval.insertFollows(testFollows);
+		//eval.insertParent(testParent);
+		eval.insertAST(pkb->getAST());
+		eval.insertFollows(pkb->getFollows());
+		eval.insertParent(pkb->getParent());
+		eval.insertModifies(pkb->getModifies());
+		eval.insertUses(pkb->getUses());
+		eval.insertVarTable(pkb->getVarTable());
+		/****** create sample Test Settings from THE PKB passed from Autotester ******/
+		
+
+		vector<vector<string>> results = eval.evaluateQuery(tree);
+
+		delete tree;
+
+		for(int i=0; i<results.size(); i++){
+			cout << results.at(i).at(0);
+			resultsList.push_back(results.at(i).at(0));
+		}
+		
+		
+		//print the results to terminal
+		/*
+		for(int i=0; i<results.size(); i++) {
+			for(int j=0; j<results[i].size(); j++)
+				cout << results[i][j];
+			cout << "\n";
+		}*/
+	}
+
+		
+		//Simple source for manual testing
+		/*
+		1.	x= x+y+z;
+		2.	while i{
+		3.		y=x+i*2;
+		4.		x=2; }
+		5.	z=z+1;
+		*/

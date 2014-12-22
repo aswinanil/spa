@@ -1,0 +1,43 @@
+#ifndef PKB_H
+#define PKB_H
+
+#include "AST.h"
+#include "VarTable.h"
+#include "Follows.h"
+#include "Parent.h"
+#include "Modifies.h"
+#include "Uses.h"
+
+class PKB{
+public:
+	//constructors
+	PKB();
+	PKB(AST *, VarTable *, Follows *, Parent *, Modifies *, Uses *);
+
+	//destructors
+	~PKB();
+
+	void setAST(AST *);
+	void setVarTable(VarTable *);
+	void setFollows(Follows *);
+	void setParent(Parent *);
+	void setModifies(Modifies *);
+	void setUses(Uses *);
+
+	AST* getAST();
+	VarTable* getVarTable();
+	Follows* getFollows();
+	Parent * getParent();
+	Uses * getUses();
+	Modifies * getModifies();
+
+private:
+	AST * ast;
+	VarTable * varTable;
+	Follows * follows;
+	Parent * parent;
+	Modifies * modifies;
+	Uses * uses;
+};
+
+#endif

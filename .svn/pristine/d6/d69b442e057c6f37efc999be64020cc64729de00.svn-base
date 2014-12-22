@@ -1,0 +1,66 @@
+#include "queryTree.h"
+#include "PKB.h"
+#include "AST.h"
+#include "TNode.h"
+#include <string>
+#include <vector>
+#include "Follows.h"
+#include "Parent.h"
+#include "Uses.h"
+#include "Modifies.h"
+#include "VarTable.h"
+
+using namespace std;
+#pragma once
+class evaluator
+{
+public:
+	evaluator(void);
+	~evaluator(void);
+	evaluator(queryTree _queryTree);
+	AST* ast;
+	Follows* follows;
+	Parent* parent;
+	Uses* uses;
+	Modifies* modifies;
+	VarTable* varTable;
+
+	//insertPKB
+	void insertAST(AST* _ast);
+	void insertFollows(Follows* _follows);
+	void insertParent(Parent* _parent);
+	void insertModifies(Modifies* _modifies);
+	void insertUses(Uses* _uses);
+	void insertVarTable(VarTable* _varTable);
+
+	vector<vector<string>> evaluateQuery(queryTree* _queryTree);
+
+
+private:
+	vector<vector<string>> getAllByType(string _select, string _selectType, queryTree* _queryTree);
+	
+	//evaluating
+	vector<vector<string>> evaluate(vector<vector<string>> _results ,queryTree* _queryTree);
+	vector<vector<string>> pattern(vector<vector<string>> _results ,queryTree* _queryTree);
+	
+	//follows, follows*
+	vector<vector<string>> evaluateFollows(vector<vector<string>> _results ,queryTree* _queryTree);
+	vector<vector<string>> evaluateFollowsStar(vector<vector<string>> _results ,queryTree* _queryTree);
+	
+	//parent, parent*
+	vector<vector<string>> evaluateParent(vector<vector<string>> _results ,queryTree* _queryTree);
+	vector<vector<string>> evaluateParentStar(vector<vector<string>> _results ,queryTree* _queryTree);
+
+	//uses
+	vector<vector<string>> evaluateUses(vector<vector<string>> _results ,queryTree* _queryTree);
+
+	//modifies, modifies*
+	vector<vector<string>> evaluateModifies(vector<vector<string>> _results ,queryTree* _queryTree);
+
+	//pattern
+	bool stmtHasPattern(int stmtNum, queryTree* _queryTree);
+	
+	bool varHasPatternWithStatement(string _varName, int _stmtNum, queryTree* _queryTree);
+
+};
+

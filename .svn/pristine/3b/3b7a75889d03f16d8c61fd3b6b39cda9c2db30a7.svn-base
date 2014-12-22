@@ -1,0 +1,38 @@
+#pragma once
+#include <vector>
+
+using namespace std;
+
+typedef int STMT; //statement number
+typedef vector<STMT> STMTLST;
+
+class Parent {
+ 
+  public:
+  // Default constructor
+  Parent();
+
+  // method to set parentStmt as parent of childStmt
+  void setParent(STMT parentStmt, STMT childStmt);
+
+  // returns -1 if childStmt has no parent
+  STMT getParent(STMT childStmt);
+
+  // returns -1 if childStmt has no parent star
+  STMTLST getParentStar(STMT childStmt);
+
+  // returns null array if there are no children statements
+  STMTLST getChild(STMT parentStmt);
+
+  // returns null array if there are no children statements
+  STMTLST getChildStar(STMT parentStmt);
+
+  // returns true if firstStmt is a parent of secondStmt
+  bool isParent(STMT firstStmt, STMT secondStmt);
+
+  // returns true if firstStmt is parent star of secondStmt
+  bool isParentStar(STMT firstStmt, STMT secondStmt);
+
+ private:
+	 vector<STMTLST> ParentDB; 
+};

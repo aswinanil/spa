@@ -1,0 +1,42 @@
+//VarTable stores all the variables that appeared in the program
+
+#pragma once
+#include <string>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+typedef int INDEX;
+typedef string VARNAME;
+typedef vector<VARNAME> VARLIST;
+
+class VarTable{
+ 
+  public:
+  // Default constructor
+  VarTable();
+
+  // method to insert a variable to VarTable
+  // return the index of the variable (even if it already exists)
+  // the first variable in the table has index 0
+  INDEX insertVar(VARNAME varName);
+
+  // method to get the name of a variable
+  // if indx is not valid (i.e. indx<0 or indx>noOVar-1), return an empty string
+  VARNAME getVarName(INDEX indx);
+
+  // method to get the index of a variable
+  // if the variable does not exist, return -1
+  INDEX getVarIndex(VARNAME varName);
+
+  //method to return all the variables in the VarTable
+  VARLIST getAllVar();
+
+  //method to return the number of variables in the table
+  int getNoOfVar();
+
+ private:
+  VARLIST VarList;				// an array of variable names
+  int noOfVar;              // number of variables currently stored in this VarTable
+};

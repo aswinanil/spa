@@ -1,0 +1,36 @@
+#pragma once
+
+#include <vector>
+#include "VarTable.h"
+
+using namespace std;
+
+typedef int STMT; //statement number
+typedef vector<STMT> STMTLST;
+typedef vector<INDEX> INDEXLST;
+
+using namespace std;
+
+class Uses {
+ 
+  public:
+  // Default constructor
+  Uses(VarTable* theVarTable);
+
+  // method to set varName as Uses in statementNumber, returns index of varName in varTable
+  INDEX setUses(STMT statementNumber, VARNAME varName);
+
+  // returns a list of all variables in statementNumber, returns empty list if there are no such variables
+  INDEXLST getVariable(STMT statementNumber);
+
+  // returns a list of statement numbers which contains varName, returns empty list if there are no such statements 
+  STMTLST getStatement(VARNAME varName);
+
+  // returns true if statementNumber contains varName
+  bool isUses(STMT statementNumber, VARNAME varName);
+
+
+ private:
+	 vector<STMTLST> UsesDB; 
+	 VarTable* varTable;
+};

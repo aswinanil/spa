@@ -1,0 +1,699 @@
+#pragma once
+#include "PreProcessor.h"
+#include "AbstractWrapper.h"
+
+// Default constructor	
+PreProcessor::PreProcessor() {	
+	/*** Program Model Tables ***/
+
+	// scope of design entities
+	entTable.push_back("assign");
+	entTable.push_back("while");
+	entTable.push_back("stmt");
+	entTable.push_back("constant");
+	entTable.push_back("variable");
+	entTable.push_back("prog_line");
+
+	// scope of relations and their allowed argument types.
+	std::vector<std::string> tempRow;
+
+	tempRow.push_back("Follows");
+	tempRow.push_back("2");
+	tempRow.push_back("assign");
+	tempRow.push_back("while");
+	tempRow.push_back("stmt");
+	tempRow.push_back("Integer");
+	tempRow.push_back("_");
+	tempRow.push_back(";");
+	tempRow.push_back("assign");
+	tempRow.push_back("while");
+	tempRow.push_back("stmt");
+	tempRow.push_back("Integer");
+	tempRow.push_back("_");
+	tempRow.push_back(";");		
+	relTable.push_back(tempRow);
+	tempRow.clear();
+
+	tempRow.push_back("Follows*");
+	tempRow.push_back("2");
+	tempRow.push_back("assign");
+	tempRow.push_back("while");
+	tempRow.push_back("stmt");
+	tempRow.push_back("Integer");
+	tempRow.push_back("_");
+	tempRow.push_back(";");
+	tempRow.push_back("assign");
+	tempRow.push_back("while");
+	tempRow.push_back("stmt");
+	tempRow.push_back("Integer");
+	tempRow.push_back("_");
+	tempRow.push_back(";");		
+	relTable.push_back(tempRow);
+	tempRow.clear();
+
+	tempRow.push_back("Parent");
+	tempRow.push_back("2");
+	tempRow.push_back("stmt");
+	tempRow.push_back("while");
+	tempRow.push_back("Integer");
+	tempRow.push_back("_");
+	tempRow.push_back(";");
+	tempRow.push_back("stmt");
+	tempRow.push_back("while");
+	tempRow.push_back("assign");
+	tempRow.push_back("Integer");
+	tempRow.push_back("_");
+	tempRow.push_back(";");		
+	relTable.push_back(tempRow);
+	tempRow.clear();
+
+	tempRow.push_back("Parent*");
+	tempRow.push_back("2");
+	tempRow.push_back("stmt");
+	tempRow.push_back("while");
+	tempRow.push_back("Integer");
+	tempRow.push_back("_");
+	tempRow.push_back(";");
+	tempRow.push_back("stmt");
+	tempRow.push_back("while");
+	tempRow.push_back("assign");
+	tempRow.push_back("Integer");
+	tempRow.push_back("_");
+	tempRow.push_back(";");
+	relTable.push_back(tempRow);
+	tempRow.clear();
+
+	tempRow.push_back("Modifies");
+	tempRow.push_back("2");
+	tempRow.push_back("assign");
+	tempRow.push_back("stmt");
+	tempRow.push_back("while");
+	tempRow.push_back("Integer");
+	tempRow.push_back("_");
+	tempRow.push_back(";");
+	tempRow.push_back("variable");
+	tempRow.push_back("Ident");
+	tempRow.push_back("_");
+	tempRow.push_back(";");
+	relTable.push_back(tempRow);
+	tempRow.clear();
+
+	tempRow.push_back("Uses");
+	tempRow.push_back("2");
+	tempRow.push_back("assign");
+	tempRow.push_back("stmt");
+	tempRow.push_back("while");
+	tempRow.push_back("Integer");
+	tempRow.push_back("_");
+	tempRow.push_back(";");
+	tempRow.push_back("variable");
+	tempRow.push_back("Ident");
+	tempRow.push_back("_");
+	tempRow.push_back(";");
+	relTable.push_back(tempRow);
+	tempRow.clear();
+};
+	
+// controller of this class
+queryTree* PreProcessor::preProcess(std::string queryInOneLine) {		
+	/*** SEPERATING QUERY INTO 2 LINES ***/
+	queryTree * qt = new queryTree();
+	string queryInTwoLines[2];
+	int afterSelect;
+	string queryBuffer, removedChar;
+	for (int i=0; i < queryInOneLine.length(); i++) {
+		queryBuffer = "";
+		while(queryInOneLine[i] == ' ')
+			i++;
+		//the case where there are no declarations
+		if(queryInOneLine[i] == 'S') {
+			queryInTwoLines[1] += "Select";						
+			afterSelect = i;
+			break;
+		}
+		while(queryInOneLine[i] != ';') {
+			queryBuffer += queryInOneLine[i];
+			i++;
+		}
+		//go past ';'
+		queryBuffer += queryInOneLine[i];
+		i++;
+		queryInTwoLines[0] += queryBuffer + " ";
+		queryBuffer = "";
+		while(queryInOneLine[i] == ' ')
+			i++;
+		//grab the word immediately after a ';'
+		while(queryInOneLine[i] != ' ') {
+			queryBuffer += queryInOneLine[i];
+			i++;
+		}
+		if(queryBuffer == "Select") {
+			queryInTwoLines[1] += queryBuffer;									
+			afterSelect = i;
+			break;
+		}
+		else {
+			queryInTwoLines[0] += queryBuffer;
+			queryInTwoLines[0] += ' ';
+		}
+	}
+
+	while(afterSelect < queryInOneLine.length()) {
+		queryInTwoLines[1] += queryInOneLine[afterSelect];
+		afterSelect++;
+	}
+	
+	/*** PARSING THE DECLARATIONS ***/
+	std::string desEnt, entVar;
+	std::vector <std::string> entVect;
+	for (int i=0; i < queryInTwoLines[0].length(); i++) {
+		while(queryInTwoLines[0][i] == ' ')
+			i++;
+		while(queryInTwoLines[0][i] != ' ') {
+			desEnt += queryInTwoLines[0][i];
+			i++;
+		}
+		entVect.push_back(desEnt);
+		desEnt = "";
+		while(queryInTwoLines[0][i] == ' ')
+			i++;
+		//read in all entVar after a single Design Entity
+		while(queryInTwoLines[0][i] != ';') {
+			while(queryInTwoLines[0][i] != ',' && queryInTwoLines[0][i] != ';') {
+				while(queryInTwoLines[0][i] != ' ' && queryInTwoLines[0][i] != ',' && queryInTwoLines[0][i] != ';') {
+					entVar += queryInTwoLines[0][i];
+					i++;
+				}
+				while(queryInTwoLines[0][i] == ' ' && queryInTwoLines[0][i] != ',' && queryInTwoLines[0][i] != ';')
+					i++;				
+			}
+			//go past ','
+			if(queryInTwoLines[0][i] == ',')
+				i++;
+			if(entVar != "" && isValidIdent(entVar)) 
+				entVect.push_back(entVar);
+			entVar = "";
+			while(queryInTwoLines[0][i] == ' ')
+					i++;
+		}
+		entVect.push_back(";");
+		i++;
+	}
+	
+	/*** VALIDATING THE READ IN DESIGN ENTIIES ***/
+	int iter = 0;
+	vector<string> * entVarVect;
+	while(iter<entVect.size()) {
+		desEnt = entVect[iter];
+		iter++;
+		entVarVect = new vector<string>();
+		while(entVect[iter] != ";") {
+			entVarVect->push_back(entVect[iter]);
+			iter++;	
+		}
+		//skip past the colon
+		iter++;
+		if(existsDesEnt(desEnt)) {
+			bool noRedeclaration = insertDesEnt(desEnt, entVarVect);
+			if(! noRedeclaration) {
+				cout << "Error: Redeclared variables\n";
+				entVarTable.clear();
+				return qt;
+			}
+		}
+		else {
+			std::cout << "Error: no such design entity called '" << desEnt << "\n";
+			entVarTable.clear();
+			return qt;
+		}
+	}
+
+	/*** PARSING THE QUERY ***/
+	std::string select, relation, arg1, arg2;
+	//i=7 to go past select clause
+	iter=7;
+	//insert select variable
+	while(queryInTwoLines[1][iter] == ' ')
+		iter++;
+	while(iter < queryInTwoLines[1].length() && queryInTwoLines[1][iter] != ' ') {
+		select += queryInTwoLines[1][iter];
+		iter++;
+	}
+	string selectType;
+	int selectIndex = 0;
+	//validate if the select argument is a synonym
+	if(select == "BOOLEAN")			//extra
+		selectType = "BOOLEAN";		//extra
+	else {
+		selectIndex = existsEntValue(select);
+		if(selectIndex != -1) {
+			selectType = entVarTable[selectIndex][0];
+			qt->insertSelect(select);
+			qt->insertSelectType(selectType);
+		}
+		else {
+			cout << "Error: Invalid select\n";
+			entVarTable.clear();
+			return qt;
+		}
+	}
+	while(iter < queryInTwoLines[1].length() && queryInTwoLines[1][iter] == ' ')
+		iter++;
+	if(iter == queryInTwoLines[1].length()-1) {
+		cout << "Success: Select "<< select << " with no following such that OR pattern clause\n";
+		return qt;
+	}
+	//no such that or pattern clause
+	if(iter==queryInTwoLines[1].length()) {
+		cout << select << " " << selectType << " is a valid Select not followed by a such that OR pattern clause\n";
+		entVarTable.clear();
+		return qt;
+	}
+		
+	for (iter; iter < queryInTwoLines[1].length(); iter++) {
+		//Read in the next clause
+		string clause;		
+		while(queryInTwoLines[1][iter] != ' ') {
+			clause += queryInTwoLines[1][iter];
+			iter++;
+		}
+
+		/*** SUCH THAT CLAUSE ***/
+		if(clause == "such") {
+			//parsing part after such that								
+			//go past "that"
+			while(queryInTwoLines[1][iter] == ' ')
+				iter++;
+			while(queryInTwoLines[1][iter] != ' ')
+				iter++;
+			while(queryInTwoLines[1][iter] == ' ')
+				iter++;
+			//read in the relation
+			relation = "";
+			//go past '('
+			while(queryInTwoLines[1][iter] != ' ' && queryInTwoLines[1][iter] != '(') {
+				relation += queryInTwoLines[1][iter];
+				iter++;
+			}
+			if(queryInTwoLines[1][iter] == '(')
+				iter++;
+			else if(queryInTwoLines[1][iter] == ' ') {
+				while(queryInTwoLines[1][iter] == ' ')
+					iter++;
+				iter++;
+			}
+			while(queryInTwoLines[1][iter] == ' ')
+					iter++;
+			//read in first argument
+			arg1 = "";
+			while(queryInTwoLines[1][iter] != ',' && queryInTwoLines[1][iter] != ' ') {
+				arg1 += queryInTwoLines[1][iter];
+				iter++;
+			}
+			//go past ','
+			if(queryInTwoLines[1][iter] == ',')
+				iter++;
+			else if(queryInTwoLines[1][iter] == ' ') {
+				while(queryInTwoLines[1][iter] == ' ')
+					iter++;
+				iter++;
+			}
+			//go past ' ' after the ','
+			if(queryInTwoLines[1][iter] == ' ')
+				while(queryInTwoLines[1][iter] == ' ')
+					iter++;
+			//read in second argument
+			arg2 = "";
+			while(queryInTwoLines[1][iter] != ')' && queryInTwoLines[1][iter] != ' ') {
+				arg2 += queryInTwoLines[1][iter];
+				iter++;
+			}
+			while(queryInTwoLines[1][iter] == ' ')
+				iter++;
+			//stop at the ')' if pattern is next clause, for loop will auto go past it
+
+			/*** VALIDATING RELATION ***/
+			string arg1Type, arg2Type;
+			int arg1Value, arg2Value;
+			if(existsSubQuery(relation, arg1, arg2)) {
+				/*** TIME CHECK ***/
+				if (AbstractWrapper::GlobalStop) {
+					entVarTable.clear();
+					queryTree * qt = new queryTree();
+					return qt;
+				}
+				// get arg1 Type
+				if(arg1 == "0")
+					arg1Type = "Integer";
+				else {
+					arg1Value = atoi(arg1.c_str());
+					if(arg1Value!=0)
+						arg1Type = "Integer";
+				}
+				if(arg1Type!="Integer") {
+					if(arg1 == "_")
+						arg1Type = "_";
+					else {
+						selectIndex = existsEntValue(arg1);
+						arg1Type = entVarTable[selectIndex][0];
+					}
+				}
+				// get arg2 Type				
+				if(arg2 == "_")
+					arg2Type = "_";
+				else if(existsEntValue(arg2) != -1) {
+					selectIndex = existsEntValue(arg2);
+					arg2Type = entVarTable[selectIndex][0];
+				}
+				else {
+					// is it a Integer ?
+					if(relation != "Modifies" && relation != "Uses") {
+						if(arg2 == "0")
+							arg2Type = "Integer";
+						else {
+							arg2Value = atoi(arg2.c_str());
+							if(arg2Value!=0)
+								arg2Type = "Integer";
+						}
+					}
+					// is it a Ident ?
+					else {
+						string inputIdent;
+						for(int i=1; i<arg2.length()-1; i++)
+							inputIdent += arg2[i];
+						if(isValidIdent(inputIdent))
+							arg2Type = "Ident";
+						arg2Type = "Ident";
+						arg2 = inputIdent;
+					}
+				}
+				qt->insertSuchThat(relation, arg1, arg1Type, arg2, arg2Type);
+				cout << "Success: " << relation << " " << arg1 << " " << arg1Type << " " << arg2 << " " << arg2Type << " - is a valid such that!\n";
+			}
+			else {
+				cout << "Error: " << relation << " " << arg1 << " " << arg2 << " - invalid such that!\n";
+				entVarTable.clear();
+				queryTree * qt = new queryTree();
+				return qt;
+			}
+		}
+
+		/*** PATTERN CLAUSE ***/
+		else if (clause == "pattern") {
+			//go to syn-assign
+			while(queryInTwoLines[1][iter] == ' ')
+				iter++;
+
+			string pattAssign, pattArg1, pattArg2;
+			pattAssign = "";
+			while(queryInTwoLines[1][iter] != '(' && queryInTwoLines[1][iter] != ' ') {
+				pattAssign += queryInTwoLines[1][iter];
+				iter++;
+			}
+			while(queryInTwoLines[1][iter] == ' ')
+				iter++;
+			//go past '('
+			iter++;
+			while(queryInTwoLines[1][iter] == ' ')
+				iter++;
+			pattArg1 = "";
+			while(queryInTwoLines[1][iter] != ',' && queryInTwoLines[1][iter] != ' ') {
+				pattArg1 += queryInTwoLines[1][iter];
+				iter++;
+			}
+			while(queryInTwoLines[1][iter] == ' ')
+				iter++;
+			//go past ','
+			iter ++;
+			while(queryInTwoLines[1][iter] == ' ')
+				iter++;
+			pattArg2 = "";
+			while(queryInTwoLines[1][iter] != ')' && queryInTwoLines[1][iter] != ' ') {
+				pattArg2 += queryInTwoLines[1][iter];
+				iter++;
+			}
+			while(queryInTwoLines[1][iter] == ' ')
+				iter++;
+			//stop at the ')', for loop will auto go past it
+			
+			/*** VALIDATING PATTERN ***/
+			if(isValidPattern(pattAssign, pattArg1, pattArg2)) {
+				/*** TIME CHECK ***/
+				if (AbstractWrapper::GlobalStop) {
+					entVarTable.clear();
+					queryTree * qt = new queryTree();
+					return qt;
+				}
+				string pattArg1Type;
+				if(pattArg1 == "_")
+					pattArg1Type = "_";					
+				else if(pattArg1.length()>1 && pattArg1[0] == '"') {
+					pattArg1Type = "Ident";
+					string subPattArg1;
+					for(int i=1; i<pattArg1.length()-1; i++)
+						subPattArg1 += pattArg1[i];
+					pattArg1 = subPattArg1;
+				}
+				else {
+					int pattArg1Index = existsEntValue(pattArg1);
+					pattArg1Type = entVarTable[pattArg1Index][0];
+				}
+				string pattArg2Type;
+				if(pattArg2 == "_")
+					pattArg2Type = "_";								
+				else {
+					pattArg2Type = "Var_name";					
+					string subPattArg2;
+					for(int i=2; i<pattArg2.length()-2; i++)
+						subPattArg2 += pattArg2[i];				
+					pattArg2 = subPattArg2;
+				}
+				qt->insertPattern(pattAssign, pattArg1, pattArg1Type, pattArg2, pattArg2Type);
+				cout << "Success: " << pattAssign << " " << pattArg1 << " " << pattArg1Type << " " << pattArg2 << " " << pattArg2Type << " - is a valid pattern!\n";
+			}
+			else {
+				cout << "Error: " << pattAssign << " " << pattArg1 << " " << pattArg2 << " - invalid pattern!\n";
+				entVarTable.clear();
+				queryTree * qt = new queryTree();
+				return qt;
+			}
+		}
+		// still got more to the query, will go up to the for loop
+	}
+	entVarTable.clear();
+	return qt;
+}
+
+// method to validate a pattern and it's arguments in the query
+bool PreProcessor::isValidPattern(string pattAssign, string pattArg1, string pattArg2) {
+	//validate pattAssig
+	int pattAssignIndex = existsEntValue(pattAssign);
+	if(pattAssignIndex!= -1) {
+		string pattAssignType = entVarTable[pattAssignIndex][0];
+		if(pattAssignType != "assign")
+			return false;
+	}
+	else 
+		return false;
+	//validate pattArg1
+	if(!isValidEntRef(pattArg1))
+		return false;
+	//if it's a synonym check if it's a variable
+	else {
+		if(pattArg1!= "_" && pattArg1[0]!= '"') {
+			int pattArg1Type = existsEntValue(pattArg1);
+			if(entVarTable[pattArg1Type][0]!="variable")
+				return false;
+		}
+	}
+	//validate pattArg2
+	if(!isValidExprSpec(pattArg2))
+		return false;
+	//passed all conditions
+	return true;
+}
+
+// returns true if inputIdent is valid NAME: LETTER(LETTER|DIGIT)*
+bool PreProcessor::isValidName(string inputName) {
+	if(inputName.size()>=1 && isalpha(inputName[0])) {
+		for(int i = 1; i< inputName.length(); i++)
+			if(!isalnum(inputName[i]))
+				return false;
+	}
+	else 
+		return false;
+	//passes all cond
+	return true;
+}
+
+// returns true if inputIdent is valid IDENT: LETTER(LETTER|DIGIT|'#')*
+bool PreProcessor::isValidIdent(string inputIdent) {
+	bool validity = true;
+	if(inputIdent.size()>=1 && isalpha(inputIdent[0]))
+		for(int i = 1; i< inputIdent.length(); i++) {
+			if(!isalnum(inputIdent[i]) && inputIdent[i] != '#')
+				validity = false;
+		}
+	else 
+		validity = false;
+	return validity;
+}
+
+// returns true if inputIdent is valid Expression-Spec: '_' ""var_name"" '_' | '_'
+bool PreProcessor::isValidExprSpec(string inputSpec) {
+	//is it a '_' ?
+	if(inputSpec == "_")
+		return true;
+	//is it a '_' ""var_name"" '_' ?
+	string var_name = "";
+	if(inputSpec.size()>4 && inputSpec[0] == '_' && inputSpec[inputSpec.length()-1] == '_' && inputSpec[1] == '"' && inputSpec[inputSpec.length()-2] == '"') {
+		for(int i=2; i< inputSpec.length()-2; i++)
+			var_name += inputSpec[i];	
+	//is the varname a valid NAME ?
+	if(isValidName(var_name))
+			return true;
+	}
+	return false;
+}
+
+// returns true if inputRef is valid Entity Reference: synonym | '_' | ""IDENT""
+bool PreProcessor::isValidEntRef(string inputRef) {
+	//is it a '_'?
+	if(inputRef == "_")
+		return true;
+	//is it a synonym?
+	else if(existsEntValue(inputRef) != -1)
+		return true;
+	//is it a IDENT?
+	else if(inputRef!="" && inputRef[0] == '"' && inputRef[inputRef.length()-1] == '"') {
+		string inputIdent;
+		for(int i=1; i<inputRef.length()-1; i++)
+			inputIdent += inputRef[i];
+		if(isValidIdent(inputIdent))
+			return true;
+	}	
+	//failed all conditions
+	return false;
+}
+
+// method to insert your synonyms in a table during declarations
+bool PreProcessor::insertDesEnt(std::string desEnt, vector<string> * entVarVect) {
+	bool added = false;
+	for(int i=0; i<entVarTable.size(); i++) {
+		if(entVarTable[i][0] == desEnt) {
+			for(int j=0; j<entVarVect->size(); j++) {
+				if(existsEntValue(entVarVect->at(j)) != -1)
+					return false;
+				entVarTable[i].push_back(entVarVect->at(j));
+			}
+			added = true;
+		}
+	}
+	if(!added) {
+		std::vector <std::string> tempRow;
+		tempRow.push_back(desEnt);
+		for(int i=0; i<entVarVect->size(); i++) {
+			if(existsEntValue(entVarVect->at(i)) != -1) {
+				return false;
+			}
+			tempRow.push_back(entVarVect->at(i));		
+		}
+		entVarTable.push_back(tempRow);
+	}
+	delete entVarVect;
+	return true;
+}
+
+// is the Design Entity used in the declarations among the list of allowed Design Entities ?
+bool PreProcessor::existsDesEnt(std::string desEnt) {
+	for(int i=0; i<entTable.size(); i++) {
+		if(entTable[i] == desEnt)
+			return true;
+	}
+	return false;
+}
+
+// has the synonym that appears in a query been declared initially ? Returns index that refers to synonym's design entity
+int PreProcessor::existsEntValue(std::string entVar) {
+	for(int i=0; i<entVarTable.size(); i++ ) {
+		for(int j=1; j<entVarTable[i].size(); j++ )
+			if(entVarTable[i][j] == entVar)
+				return i;
+	}
+	return -1;
+}
+
+// method to validate a relation and it's arguments in the query
+bool PreProcessor::existsSubQuery(std::string relation, std::string arg1, std::string arg2) {
+	bool arg1Success = false;
+	int arg1Index, arg2Index, j, arg1Value, arg2Value;
+	std::string arg1Type, arg2Type;
+
+	for(int i=0; i<relTable.size(); i++) {
+		//validate the relation itself
+		if(relTable[i][0] == relation) {
+			//check if the first argument is a integer
+			if(arg1 == "0")
+				arg1Type = "Integer";
+			else {
+				arg1Value = atoi(arg1.c_str());
+				if(arg1Value!=0)
+					arg1Type = "Integer";
+			}
+			if(arg1Type != "Integer") {
+				//check if the first argument a '_'
+				if(arg1 == "_")
+						arg1Type = "_";			
+				//check if first argument is a synonym
+				else {
+					arg1Index = existsEntValue(arg1);
+					if(arg1Index != -1)
+						arg1Type = entVarTable[arg1Index][0];
+				}
+			}
+			for(j=2; relTable[i][j] != ";"; j++)
+				//validate if the type of the first argument corresponds with the allowed type in relation table
+				if(arg1Type == relTable[i][j])
+					arg1Success = true;			
+			
+			//no need to validate the second argument if the first one is false
+			if(arg1Success) {
+				//check if the second argument is a '_'
+				if(arg2 == "_")
+					arg2Type = "_";				
+				//check if the second argument is a synonym				
+				else if(existsEntValue(arg2) != -1) {
+					arg2Index = existsEntValue(arg2);
+					arg2Type = entVarTable[arg2Index][0];
+				}				
+				else { 
+					//check if the second argument is an integer
+					if(relation != "Modifies" && relation != "Uses") {
+						if(arg2 == "0")
+							arg2Type = "Integer";
+						else {
+							arg2Value = atoi(arg2.c_str());
+							if(arg2Value!=0)
+								arg2Type = "Integer";							
+						}
+					}				
+					//check if the second argument is an Ident
+					else {
+						string inputIdent;
+						for(int i=1; i<arg2.length()-1; i++)
+							inputIdent += arg2[i];
+						if(isValidIdent(inputIdent))
+							arg2Type = "Ident";
+					}
+				}
+				//skip past the ";"
+				j++;
+				for(j; relTable[i][j] != ";"; j++)
+					//validate the second argument
+					if(arg2Type == relTable[i][j])
+						return true;
+			}
+		}
+	}
+	return false;
+}

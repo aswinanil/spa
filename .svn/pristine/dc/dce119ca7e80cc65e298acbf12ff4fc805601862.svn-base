@@ -1,0 +1,34 @@
+#include <string>
+#include <vector>
+
+using namespace std;
+
+#pragma once
+class queryTree
+{
+private:
+	std::vector<std::vector<string>> suchThatTree;
+	std::vector<std::vector<string>> patternTree;
+	string select;
+	string selectType;
+
+public:
+	queryTree(void);
+	~queryTree(void);
+
+	void insertSuchThat(string _relationship, string _value1, string _value1_type, string _value2, string _value2_type);
+	//old one --> void insertPattern(string _assignStatement, string _pattern1, string _pattern2);
+	//new one
+	void insertPattern(string _assignStatement, string _pattern1, string _pattern1_type, string _pattern2,string _pattern2_type);
+	int getSuchThatQuerySize();
+	void insertSelect(string _select);
+	std::vector<string> getSuchThatQuery(int _queryPosition);
+	string getSelect();
+	string getSelectType();
+	void insertSelectType(string _selectType);
+	void deleteSuchThat(int _index);
+	void insertSuchThatWithPosition(int _index, vector<string> _query);
+	
+	int getPatternQuerySize();
+	std::vector<string> getPatternQuery(int _queryPosition);
+};

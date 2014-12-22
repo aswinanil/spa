@@ -1,0 +1,37 @@
+#pragma once
+
+#include <vector>
+#include <algorithm>
+#include "VarTable.h"
+
+using namespace std;
+
+typedef int STMT; //statement number
+typedef vector<STMT> STMTLST;
+typedef vector<INDEX> INDEXLST;
+
+class Modifies {
+ 
+  public:
+  // Constructor
+  Modifies(VarTable* theVarTable);
+
+  // set Modifies(stmt, v) if that relationship hasn't been recorded 
+  // return the index of the varName in the VarTable
+  // if the varName does not exist in VarTable, ModifiesDB is unchanged and -1 is returned
+  INDEX setModifies(STMT stmt, VARNAME v);
+
+  // return the index of the variable modified in this statement, return -1 if there is no such variable
+  INDEXLST getVariable(STMT stmt);
+
+  // return a list of statements in which the variable is modified, return an empty list if there are no such statements 
+  STMTLST getStatements(VARNAME v);
+
+  // return true only if Modifies(stmt, v) exists
+  bool isModifies(STMT stmt, VARNAME v);
+
+
+ private:
+	 vector<STMTLST> ModifiesDB; //ModifiesDB stores Modifies vectors for all the variables in VarTable. A Modifies vector of a variable contains statements in which that variable is modified.  
+	 VarTable* varTable;
+};

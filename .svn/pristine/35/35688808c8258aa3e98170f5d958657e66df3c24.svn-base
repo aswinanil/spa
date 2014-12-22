@@ -1,0 +1,22 @@
+25
+cat: All Category
+1 - Parent, ImplStmtLine, Typed :: Which is the parent (type while) of the statement in line number 7
+stmt s1, s2, s5, s6; while w; assign a; 
+Select s1 such that Parent(s1, w);
+2 4 6 8 10 12
+5000
+2 - Follows, Typed, ImplStmtLine ::
+stmt s1, s2, s5, s6; while w; assign a; 
+Select a such that Follows(_, _);
+none
+5000
+3 - ParentStar, Typed, ImplStmtLine ::
+stmt s1, s2, s5, s6; while w; assign a; 
+Select w such that Follows(6, w);
+none
+5000
+4 - FollowsStar, Typed, ImplStmtLine ::
+stmt s1, s2, s5, s6; while w; assign a; 
+Select s1 such that Follows(6, s1);
+none
+5000

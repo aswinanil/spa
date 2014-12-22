@@ -1,0 +1,132 @@
+//Design Extractor traverses AST and compute all the remaining design abstractions: Uses, Modifies for procedure and call statement; Next; Affects
+#pragma once
+
+#include "DesignExtractor.h"
+
+
+	//Default Constructor
+	DesignExtractor::DesignExtractor(){}
+
+	//Constructor
+	DesignExtractor::DesignExtractor(PKB* pkb):temp(){
+		
+		ast = pkb->getAST();
+		follows = pkb->getFollows();
+		parent = pkb->getParent();
+		varTable = pkb->getVarTable();
+		procTable = pkb->getProcTable();
+		modifies = pkb->getModifies();
+		uses = pkb->getUses();
+		calls = pkb->getCalls();
+
+		flag = false;
+	}
+
+	//Build CFG for each procedure
+	void DesignExtractor::computeCFG(){
+	
+		int numOfProc = procTable->getNoOfProc();
+		CFG cfg = CFG(ast, follows, parent);
+
+		for(int i=0; i<numOfProc; i++){
+			cfg.buildCFG(procTable->getFirstStmt(i), procTable->getLastStmt(i));
+			procTable->insertCFG(i, &cfg);
+		}
+	}
+
+	string DesignExtractor::computeCalls(){
+
+		string error = "";
+		if(flag == false){
+
+			temp = calls->getTemp();		
+
+			for(vector<pair<pair<PROCNAME, PROCNAME>, STMT>>::size_type i = 0; i<temp.size(); i++)
+			{
+				PROCINDEX caller = procTable->getProcIndex(temp[i].first.first);
+				PROCINDEX callee = procTable->getProcIndex(temp[i].first.second);
+
+				if(caller == -1)
+				{
+					error += "\rProcedure "+ temp[i].first.first+" does not exist. Setting \""+temp[i].first.first+" calls "+temp[i].first.second+"\" fails.\n";
+				}
+				else if(callee == -1)
+				{
+
+					error += "\rProcedure "+ temp[i].first.second+" does not exist. Setting \""+temp[i].first.first+" calls "+temp[i].first.second+"\" fails.\n";
+				}
+				else
+				{
+					calls->setCalls(caller, callee);
+				
+				}
+
+			}
+
+			flag = true;
+		}
+
+		return error;
+	}
+
+	//compute Modifies and Uses for procedures and call statements
+	void DesignExtractor::computeModifiesAndUses(){
+
+		if(flag == false){
+			computeCalls();
+		}
+
+		//Compute Modifies and Uses for procedures
+		int numOfProc = procTable->getNoOfProc();
+		PROCLIST procNames = procTable->getAllProcNames();
+
+		for(int i = 0; i<numOfProc; i++){
+
+			PROCINDXLIST myCalleesStar = calls->getCalleesStar(procNames[i]);
+			INDEXLIST modifiedByI = procTable->getModifies(procNames[i]);
+			INDEXLIST usedByI = procTable->getUses(procNames[i]);
+
+			for(int j = 0; j<myCalleesStar.size(); j++){
+				
+				INDEXLIST modifiedByJ = procTable->getModifies(procNames[myCalleesStar[j]]);
+
+				for(int k = 0; k<modifiedByJ.size(); k++)
+				{
+					INDEXLIST::iterator it = find(modifiedByI.begin(), modifiedByI.end(), modifiedByJ[k]);
+					if(it == modifiedByI.end()){
+						procTable->insertModifies(procNames[i], varTable->getVarName(modifiedByJ[k]));
+					}
+				}
+
+				INDEXLIST usedByJ = procTable->getUses(procNames[myCalleesStar[j]]);
+
+				for(int k = 0; k<usedByJ.size(); k++)
+				{
+					INDEXLIST::iterator it = find(usedByI.begin(), usedByI.end(), usedByJ[k]);
+					if(it == usedByI.end()){
+						procTable->insertUses(procNames[i], varTable->getVarName(usedByJ[k]));
+					}
+				}
+			}
+		}
+
+		//Compute Modifies and Uses for call statements
+		for(vector<pair<pair<PROCNAME, PROCNAME>, STMT>>::size_type i = 0; i<temp.size(); i++){
+		
+			INDEXLIST varModified = procTable->getModifies(temp[i].first.second);
+			INDEXLIST varUsed = procTable->getUses(temp[i].first.second);
+			PROCINDEX callee = procTable->getProcIndex(temp[i].first.second);
+
+			for(int i=0; i<varModified.size(); i++){
+				modifies->setModifies(temp[i].second, varTable->getVarName(varModified[i]));
+			}
+
+			for(int i=0; i<varUsed.size(); i++){
+				uses->setUses(temp[i].second, varTable->getVarName(varUsed[i]));
+			}
+
+		}
+
+	}
+
+	
