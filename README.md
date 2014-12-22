@@ -8,4 +8,4 @@ SPA (Static Program Analyzer) allows users to enter a source program (written in
 [Boost libraries](http://www.boost.org/users/download/) which should be placed in the *libraries* folder
 
 ##Running it
-Run *AutoTesterInUse* with source file, queries file and an output file as parameters
+Run *AutoTesterInUse.exe* with source file, queries file and an output file as parameters
