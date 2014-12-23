@@ -1,11 +1,14 @@
 spa
 ===
 
-##About
+###About
 SPA (Static Program Analyzer) allows users to enter a source program (written in a subset of the language SIMPLE), parse it, build design abstractions, enter and evaluate queries and display results.
 
-##Requirements
+###Requirements
 [Boost libraries](http://www.boost.org/users/download/) which should be placed in the *libraries* folder
 
-##Running it
-Run *AutoTesterInUse.exe* with source file, queries file and an output file as parameters
+###Usage
+Build the project, then run from a command line:
+~~~
+AutoTesterInUse.exe <SIMPLE-source-file> <queries-file> <output-file>
+~~~
